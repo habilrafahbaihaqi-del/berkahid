@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Tooling/skill directories not part of the app code:
+    ".opencode/**",
+    ".claude/**",
+    ".codex/**",
   ]),
 ]);
 
