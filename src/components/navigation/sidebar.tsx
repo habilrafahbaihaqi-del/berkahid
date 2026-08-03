@@ -162,7 +162,7 @@ export default function Sidebar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-white/10 bg-emerald-950/80 px-4 py-3 backdrop-blur-md lg:hidden">
+      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-white/10 bg-[#063E32] px-4 py-3 shadow-sm lg:hidden">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -196,7 +196,7 @@ export default function Sidebar() {
                 <circle cx="12" cy="11" r="2.2" />
               </svg>
             </div>
-            <p className="text-xs font-bold uppercase tracking-widest text-emerald-200">
+            <p className="text-xs font-bold uppercase tracking-widest text-white">
               BerkahID
             </p>
           </div>
@@ -221,7 +221,7 @@ export default function Sidebar() {
             role="dialog"
             aria-modal="true"
             aria-label="Menu utama"
-            className="flex h-dvh w-72 max-w-[85vw] flex-col bg-emerald-950 px-3 py-6 ring-1 ring-white/10"
+            className="flex h-dvh w-72 max-w-[85vw] flex-col bg-[#063E32] px-3 py-6 ring-1 ring-white/10"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between pr-2">
@@ -283,40 +283,52 @@ export default function Sidebar() {
               })}
               {adminLink}
             </nav>
-            <div className="mt-auto rounded-2xl bg-white/5 px-3 py-3 ring-1 ring-white/10">
-              <p className="truncate text-[11px] font-semibold text-emerald-100">
-                {user?.email ?? "Pengguna"}
-              </p>
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-400/15 px-3 py-2 text-[11px] font-bold text-emerald-200 ring-1 ring-emerald-300/25 transition-colors hover:bg-emerald-400/25"
+            <div className="mt-auto flex flex-col gap-4">
+              <div
+                className="relative overflow-hidden rounded-2xl bg-cover bg-center p-4 ring-1 ring-white/20"
+                style={{ backgroundImage: "url('/quote-card-bg.jpg')" }}
               >
-                <svg
-                  className="h-3.5 w-3.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  aria-hidden
+                <div className="absolute inset-0 bg-black/40" />
+                <div className="relative z-10">
+                  <p className="text-sm font-semibold leading-relaxed text-emerald-50">
+                    “Dirikanlah shalat, sesungguhnya shalat itu mencegah dari (perbuatan) keji dan mungkar.”
+                  </p>
+                  <p className="mt-2 text-[10px] text-emerald-200/80">QS. Al-Ankabut: 45</p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-white/5 p-2 ring-1 ring-white/10">
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-400/10 px-3 py-2.5 text-xs font-bold text-emerald-100 ring-1 ring-emerald-300/20 transition-colors hover:bg-emerald-400/20"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
-                  />
-                </svg>
-                Keluar
-              </button>
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    aria-hidden
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
+                    />
+                  </svg>
+                  Keluar dari Akun
+                </button>
+              </div>
             </div>
           </aside>
         </div>
       )}
 
-      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col bg-emerald-950/60 px-3 py-6 ring-1 ring-white/10 backdrop-blur-md lg:flex">
-        <div className="flex items-center gap-3 px-3 pb-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400/20 text-emerald-200 ring-1 ring-emerald-300/30">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+      <aside className="sticky top-0 hidden h-dvh w-[260px] shrink-0 flex-col bg-[#063E32] px-4 py-6 text-white shadow-xl lg:flex">
+        <div className="flex items-center gap-3 px-2 pb-6">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/20 text-emerald-200 ring-1 ring-emerald-300/30">
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -326,10 +338,9 @@ export default function Sidebar() {
             </svg>
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-emerald-200">
-              BerkahID
+            <p className="text-sm font-bold tracking-wider text-white">
+              BERKAHID
             </p>
-            <p className="text-[10px] text-emerald-200/60">Portal Islami</p>
           </div>
         </div>
 
@@ -355,31 +366,43 @@ export default function Sidebar() {
           {adminLink}
         </nav>
 
-        <div className="mt-auto rounded-2xl bg-white/5 px-3 py-3 ring-1 ring-white/10">
-          <p className="truncate text-[11px] font-semibold text-emerald-100">
-            {user?.email ?? "Pengguna"}
-          </p>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-400/15 px-3 py-2 text-[11px] font-bold text-emerald-200 ring-1 ring-emerald-300/25 transition-colors hover:bg-emerald-400/25"
+        <div className="mt-auto flex flex-col gap-4 px-1">
+          <div
+            className="relative overflow-hidden rounded-2xl bg-cover bg-center p-5 ring-1 ring-white/10"
+            style={{ backgroundImage: "url('/quote-card-bg.jpg')" }}
           >
-            <svg
-              className="h-3.5 w-3.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-              aria-hidden
+            <div className="absolute inset-0 bg-black/40" />
+            <div className="relative z-10 flex flex-col gap-2">
+              <p className="text-[13px] font-medium leading-relaxed text-emerald-50">
+                “Dirikanlah shalat, sesungguhnya shalat itu mencegah dari (perbuatan) keji dan mungkar.”
+              </p>
+              <p className="text-[11px] text-emerald-200/80">QS. Al-Ankabut: 45</p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-white/5 p-2 ring-1 ring-white/10">
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-400/10 px-3 py-2.5 text-xs font-bold text-emerald-100 ring-1 ring-emerald-300/20 transition-colors hover:bg-emerald-400/20"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
-              />
-            </svg>
-            Keluar
-          </button>
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+                aria-hidden
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
+                />
+              </svg>
+              Keluar dari Akun
+            </button>
+          </div>
         </div>
       </aside>
     </>

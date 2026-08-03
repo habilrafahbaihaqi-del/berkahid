@@ -1,24 +1,33 @@
 "use client";
 
-import { FARDHU_KEYS, MOCK_PRAYER_TIMES, type FardhuKey } from "@/data/mock-prayer-times";
+import {
+  DEFAULT_PRAYER_TIMES,
+  FARDHU_KEYS,
+  type FardhuKey,
+  type PrayerTime,
+} from "@/data/prayer-times";
 import type { NotificationSettings } from "@/lib/notification-store";
 
 export interface AdhanTrigger {
-  prayerKey: FardhuKey;
+  prayerKey: FardhuKey | "imsak";
   prayerName: string;
   prayerTime: string;
   triggerAt: Date;
 }
 
+const NOTIFIABLE_KEYS: Array<FardhuKey | "imsak"> = ["imsak", ...FARDHU_KEYS];
+
 export function computeNextTrigger(
   settings: NotificationSettings,
   from: Date,
+  times: PrayerTime[] = DEFAULT_PRAYER_TIMES,
 ): AdhanTrigger | null {
   let best: AdhanTrigger | null = null;
 
-  for (const key of FARDHU_KEYS) {
-    if (!settings.perPrayer[key]) continue;
-    const prayer = MOCK_PRAYER_TIMES.find((p) => p.key === key);
+  for (const key of NOTIFIABLE_KEYS) {
+    const perPrayer = settings.perPrayer as Record<string, boolean | undefined>;
+    if (!perPrayer[key]) continue;
+    const prayer = times.find((p) => p.key === key);
     if (!prayer) continue;
 
     const [hour, minute] = prayer.time.split(":").map(Number);
@@ -60,7 +69,7 @@ export function showAdhanNotification(prayerName: string, prayerTime: string) {
 
 export function playAdhanSound(soundId: string) {
   try {
-    const audio = new Audio(`/sounds/${soundId}.mp3`);
+    const audio = new Audio(`/sounds/${soundId}.wav`);
     audio.volume = 0.8;
     audio.play().catch(() => playChime());
   } catch {

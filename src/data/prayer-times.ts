@@ -17,13 +17,15 @@ export interface PrayerTime {
   time: string;
 }
 
-export const MOCK_LOCATION = {
+export const FALLBACK_LOCATION = {
   city: "Yogyakarta",
   district: "Kec. Kotagede",
-  method: "Data tiruan",
+  latitude: -7.7956,
+  longitude: 110.3695,
+  method: "Metode Kemenag RI",
 };
 
-export const MOCK_PRAYER_TIMES: PrayerTime[] = [
+export const DEFAULT_PRAYER_TIMES: PrayerTime[] = [
   { key: "imsak", name: "Imsak", time: "04:22" },
   { key: "subuh", name: "Subuh", time: "04:32" },
   { key: "terbit", name: "Terbit", time: "05:44" },

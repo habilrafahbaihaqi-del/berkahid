@@ -2,6 +2,7 @@
 
 import { computeNextTrigger, notificationsSupported } from "@/lib/adhan-scheduler";
 import { useNotificationSettings } from "@/lib/notification-store";
+import { usePrayerTimesSnapshot } from "@/lib/prayer-times-store";
 import { useNow } from "@/lib/use-now";
 
 function formatTrigger(triggerAt: Date) {
@@ -13,11 +14,12 @@ function formatTrigger(triggerAt: Date) {
 
 export default function NextAdhanBadge() {
   const settings = useNotificationSettings();
+  const snapshot = usePrayerTimesSnapshot();
   const now = useNow();
 
   if (!settings.enabled || !now) return null;
 
-  const next = computeNextTrigger(settings, now);
+  const next = computeNextTrigger(settings, now, snapshot?.times);
   if (!next) return null;
 
   const supported = notificationsSupported();

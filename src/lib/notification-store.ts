@@ -1,6 +1,6 @@
 "use client";
 
-import type { FardhuKey } from "@/data/mock-prayer-times";
+import type { FardhuKey } from "@/data/prayer-times";
 import { createStoredValue, useStoredValue } from "@/lib/storage";
 
 export interface NotificationSettings {

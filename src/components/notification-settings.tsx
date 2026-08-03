@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { FARDHU_KEYS, MOCK_PRAYER_TIMES } from "@/data/mock-prayer-times";
+import { DEFAULT_PRAYER_TIMES, FARDHU_KEYS } from "@/data/prayer-times";
 import {
   computeNextTrigger,
   notificationsGranted,
@@ -15,6 +15,7 @@ import {
   updateNotificationSettings,
   useNotificationSettings,
 } from "@/lib/notification-store";
+import { usePrayerTimesSnapshot } from "@/lib/prayer-times-store";
 import { useNow } from "@/lib/use-now";
 
 const SOUNDS = [
@@ -78,9 +79,11 @@ function Card({
 
 export default function NotificationSettings() {
   const settings = useNotificationSettings();
+  const snapshot = usePrayerTimesSnapshot();
   const now = useNow();
   const [permissionNotice, setPermissionNotice] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<string | null>(null);
+  const prayerTimes = snapshot?.times ?? DEFAULT_PRAYER_TIMES;
 
   const handleMasterToggle = async (checked: boolean) => {
     setPermissionNotice(null);
@@ -172,7 +175,7 @@ export default function NotificationSettings() {
             <section className="rounded-3xl bg-emerald-500/15 p-5 ring-1 ring-emerald-300/30">
               <h2 className="text-sm font-semibold">Status Penjadwalan</h2>
               {now ? (() => {
-                const next = computeNextTrigger(settings, now);
+                const next = computeNextTrigger(settings, now, prayerTimes);
                 const granted = notificationsSupported() && notificationsGranted();
                 return (
                   <>
@@ -213,14 +216,19 @@ export default function NotificationSettings() {
             <Card title="Waktu Sholat">
               <ul className="divide-y divide-white/10">
                 {FARDHU_KEYS.map((key) => {
-                  const prayer = MOCK_PRAYER_TIMES.find((p) => p.key === key);
+                  const prayer = prayerTimes.find((p) => p.key === key);
                   if (!prayer) return null;
                   return (
                     <li
                       key={key}
                       className="flex items-center justify-between py-3"
                     >
-                      <span className="text-sm font-medium">{prayer.name}</span>
+                      <span className="text-sm font-medium">
+                        {prayer.name}
+                        <span className="ml-2 text-xs tabular-nums text-emerald-200/60">
+                          {prayer.time}
+                        </span>
+                      </span>
                       <Switch
                         checked={settings.perPrayer[key]}
                         onChange={(checked) =>

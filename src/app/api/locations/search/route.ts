@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { MOCK_CITIES } from "@/data/mock-cities";
+import { CITIES } from "@/data/cities";
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +16,10 @@ export async function GET(request: NextRequest) {
     : 8;
 
   const results = q
-    ? MOCK_CITIES.filter((c) =>
+    ? CITIES.filter((c) =>
         normalize(`${c.city} ${c.district} ${c.province}`).includes(q),
       ).slice(0, limit)
-    : MOCK_CITIES.slice(0, limit);
+    : CITIES.slice(0, limit);
 
   return NextResponse.json({
     results: results.map(({ city, district, province, latitude, longitude }) => ({

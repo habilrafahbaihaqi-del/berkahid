@@ -1,6 +1,6 @@
 "use client";
 
-import type { Location } from "@/data/mock-cities";
+import type { Location } from "@/data/cities";
 import { createStoredValue, useStoredValue } from "@/lib/storage";
 
 export type LocationSource = "auto" | "manual";

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { FARDHU_KEYS, type FardhuKey } from "@/data/mock-prayer-times";
+import { FARDHU_KEYS, type FardhuKey } from "@/data/prayer-times";
 import { createInsForgeServerClient } from "@/lib/insforge/server";
 
 export const dynamic = "force-dynamic";

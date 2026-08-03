@@ -50,7 +50,9 @@ export async function GET(request: NextRequest) {
   }
 
   const url = new URL(ALADHAN_API);
-  url.pathname = `${url.pathname}/${date.value ?? new Date().toISOString().slice(0, 10)}`;
+  if (date.value) {
+    url.pathname = `${url.pathname}/${date.value}`;
+  }
   url.searchParams.set("latitude", latitude.value.toFixed(6));
   url.searchParams.set("longitude", longitude.value.toFixed(6));
   url.searchParams.set("method", String(PRAYER_METHOD));
@@ -77,7 +79,7 @@ export async function GET(request: NextRequest) {
   }
 
   const payload = (await response.json()) as {
-    data?: { timings?: AladhanTimings };
+    data?: { timings?: AladhanTimings; date?: { hijri?: { day?: string; month?: { en?: string }; year?: string } } };
   };
   const timings = payload.data?.timings;
   if (!timings) {
@@ -90,13 +92,20 @@ export async function GET(request: NextRequest) {
   const normalize = (value: string | undefined, fallback: string) =>
     value?.slice(0, 5) ?? fallback;
 
+  const hijri = payload.data?.date?.hijri;
+  const hijriLabel =
+    hijri?.day && hijri?.month?.en && hijri?.year
+      ? `${hijri.day} ${hijri.month.en} ${hijri.year} H`
+      : null;
+
   return NextResponse.json({
     source: "aladhan",
     location: {
       latitude: latitude.value,
       longitude: longitude.value,
     },
-    date: url.pathname.split("/").pop(),
+    date: date.value ?? null,
+    hijri: hijriLabel,
     timings: {
       imsak: normalize(timings.Imsak, "04:20"),
       subuh: normalize(timings.Fajr, "04:30"),

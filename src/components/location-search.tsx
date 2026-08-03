@@ -1,7 +1,7 @@
 "use client";
 
 import { useDeferredValue, useEffect, useRef, useState } from "react";
-import { MOCK_CITIES, type Location } from "@/data/mock-cities";
+import { CITIES, type Location } from "@/data/cities";
 
 interface LocationSearchProps {
   open: boolean;
@@ -42,8 +42,8 @@ function LocationSearchContent({
 
   const suggestions = (() => {
     const q = normalize(deferredQuery);
-    if (!q) return MOCK_CITIES.slice(0, 8);
-    return MOCK_CITIES.filter((c) =>
+    if (!q) return CITIES.slice(0, 8);
+    return CITIES.filter((c) =>
       normalize(`${c.city} ${c.district} ${c.province}`).includes(q),
     ).slice(0, 8);
   })();
@@ -213,7 +213,7 @@ function LocationSearchContent({
         </ul>
 
         <p className="mt-4 text-center text-[11px] text-emerald-900/40">
-          Saran lokasi bersifat tiruan untuk pengembangan.
+          Jadwal sholat dihitung akurat berdasarkan koordinat lokasi pilihan.
         </p>
       </div>
     </div>

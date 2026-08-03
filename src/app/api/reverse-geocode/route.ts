@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { findNearestLocation } from "@/data/mock-cities";
+import { findNearestLocation } from "@/data/cities";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   const location = findNearestLocation(latitude.value, longitude.value);
 
   return NextResponse.json({
-    source: "mock-nearest-city",
+    source: "nearest-city",
     location: {
       city: location.city,
       district: location.district,

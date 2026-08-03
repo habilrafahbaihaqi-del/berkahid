@@ -1,6 +1,6 @@
 "use client";
 
-import { findNearestLocation, type Location } from "@/data/mock-cities";
+import { findNearestLocation, type Location } from "@/data/cities";
 import {
   saveAutoCoords,
   saveLocation,

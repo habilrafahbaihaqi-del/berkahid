@@ -11,7 +11,7 @@ export interface CityCandidate extends Location {
   longitude: number;
 }
 
-export const MOCK_CITIES: CityCandidate[] = [
+export const CITIES: CityCandidate[] = [
   { city: "Banda Aceh", district: "Kec. Syiah Kuala", province: "Aceh", latitude: 5.5483, longitude: 95.3238 },
   { city: "Medan", district: "Kec. Medan Petisah", province: "Sumatera Utara", latitude: 3.5952, longitude: 98.6722 },
   { city: "Padang", district: "Kec. Padang Barat", province: "Sumatera Barat", latitude: -0.9471, longitude: 100.4172 },
@@ -84,10 +84,10 @@ function toRadians(degrees: number) {
 
 export function findNearestLocation(latitude: number, longitude: number): Location {
   const EARTH_RADIUS_KM = 6371;
-  let nearest = MOCK_CITIES[0];
+  let nearest = CITIES[0];
   let nearestDistance = Infinity;
 
-  for (const candidate of MOCK_CITIES) {
+  for (const candidate of CITIES) {
     const dLat = toRadians(candidate.latitude - latitude);
     const dLon = toRadians(candidate.longitude - longitude);
     const a =
