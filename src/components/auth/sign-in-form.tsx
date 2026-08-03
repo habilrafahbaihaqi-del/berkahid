@@ -31,7 +31,7 @@ export default function SignInForm() {
       setSubmitting(false);
       return;
     }
-    router.replace("/dashboard");
+    router.replace(result.user.role === "admin" ? "/admin" : "/dashboard");
     router.refresh();
   };
 
