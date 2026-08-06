@@ -29,6 +29,8 @@ export default function QiblaCompass() {
   const [simulating, setSimulating] = useState(false);
   const [calibrationOpen, setCalibrationOpen] = useState(false);
   const [calibrationDone, setCalibrationDone] = useState(false);
+  const [apiBearing, setApiBearing] = useState<number | null>(null);
+  const [apiError, setApiError] = useState(false);
   const simulationRef = useRef<number | null>(null);
 
   const storedCoords =
@@ -41,7 +43,7 @@ export default function QiblaCompass() {
   const coords = storedCoords ?? detectedCoords;
   const locationLabel =
     storedCoords && storedLocation
-      ? `${storedLocation.city}, ${storedLocation.district}`
+      ? `${storedLocation.city}${storedLocation.district ? `, ${storedLocation.district}` : ""}${storedLocation.kabupaten && storedLocation.kabupaten !== storedLocation.city ? ` · ${storedLocation.kabupaten}` : ""}`
       : detectedLabel || "Mendeteksi lokasi…";
 
   const requestSensorPermission =
@@ -100,6 +102,34 @@ export default function QiblaCompass() {
       .catch(() => setSensorState("denied"));
   }, [requestSensorPermission]);
 
+  const lat = coords?.latitude;
+  const lon = coords?.longitude;
+
+  useEffect(() => {
+    if (lat == null || lon == null) return;
+    let cancelled = false;
+    fetch(
+      `/api/muslim/qibla?lat=${lat.toFixed(6)}&lon=${lon.toFixed(6)}`,
+      { cache: "no-store" },
+    )
+      .then((response) => (response.ok ? response.json() : Promise.reject(new Error("failed"))))
+      .then((payload: { data?: { direction?: number } }) => {
+        if (cancelled) return;
+        if (typeof payload.data?.direction === "number") {
+          setApiBearing(payload.data.direction);
+          setApiError(false);
+        } else {
+          setApiError(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setApiError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [lat, lon]);
+
   useEffect(() => {
     if (sensorState !== "active") return;
     const handler = (event: DeviceOrientationEvent) => {
@@ -142,6 +172,7 @@ export default function QiblaCompass() {
   const bearing = coords
     ? computeQiblaBearing(coords.latitude, coords.longitude)
     : null;
+  const needleBearing = apiBearing ?? bearing;
   const distance = coords ? distanceToKaabaKm(coords.latitude, coords.longitude) : null;
 
   return (
@@ -212,10 +243,10 @@ export default function QiblaCompass() {
             ))}
           </div>
 
-          {bearing !== null && (
+          {needleBearing !== null && (
             <div
               className="absolute inset-0 transition-transform duration-150"
-              style={{ transform: `rotate(${-heading + bearing}deg)` }}
+              style={{ transform: `rotate(${-heading + needleBearing}deg)` }}
             >
               <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full">
                 <div className="mx-auto h-24 w-1.5 rounded-t-full bg-gradient-to-b from-amber-400 to-emerald-500" />
@@ -231,14 +262,20 @@ export default function QiblaCompass() {
           </div>
         </div>
 
-        {bearing !== null && (
+        {needleBearing !== null && (
           <div className="text-center">
             <p className="text-3xl font-bold tabular-nums text-white">
-              {bearing.toFixed(1)}°
+              {needleBearing.toFixed(1)}°
             </p>
             <p className="mt-1 text-sm font-semibold text-emerald-200">
-              Kiblat: arah {compassDirection(bearing)}
+              Kiblat: arah {compassDirection(needleBearing)}
             </p>
+            {apiBearing !== null && bearing !== null && (
+              <p className="mt-1 text-[11px] text-emerald-100/60">
+                Resmi (api.myquran.com): {apiBearing.toFixed(1)}° · Lokal:{" "}
+                {bearing.toFixed(1)}°
+              </p>
+            )}
             {distance !== null && (
               <p className="mt-1 text-xs text-emerald-100/60">
                 ±{Math.round(distance).toLocaleString("id-ID")} km dari Ka&apos;bah
@@ -328,7 +365,9 @@ export default function QiblaCompass() {
       </section>
 
       <p className="text-center text-[11px] text-emerald-200/50">
-        Arah kiblat dihitung dari lokasi ke Ka&apos;bah di Makkah.
+        {apiError
+          ? "Gagal mengambil data resmi — arah dihitung dari lokasi ke Ka'bah di Makkah."
+          : "Arah kiblat resmi dari api.myquran.com, dihitung dari lokasi ke Ka'bah di Makkah."}
       </p>
 
       <QiblaCalibration

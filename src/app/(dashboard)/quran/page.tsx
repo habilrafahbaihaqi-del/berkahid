@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function QuranPage() {
   return (
-    <div className="min-h-dvh bg-gradient-to-b from-emerald-800 via-emerald-700 to-teal-900 text-white">
+    <div className="min-h-dvh bg-gray-50 text-gray-900">
       <SurahList surahs={SURAHS} />
     </div>
   );

@@ -11,37 +11,45 @@ export default function ContinueReading() {
   const surah = SURAHS.find((s) => s.number === progress.surah);
   if (!surah) return null;
 
+  const percentage = Math.round((progress.ayah / surah.ayahs) * 100);
+
   return (
     <Link
       href={`/quran/${surah.number}#ayah-${progress.ayah}`}
-      className="flex items-center gap-3 rounded-3xl bg-emerald-400/15 p-4 ring-1 ring-emerald-300/30 transition-colors hover:bg-emerald-400/20"
+      className="flex items-center gap-4 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-gray-100 transition-shadow hover:shadow-md"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-400 text-emerald-950">
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#1db584] text-white shadow-sm">
         <svg
-          className="h-5 w-5"
-          fill="none"
+          className="h-6 w-6 translate-x-[1px]"
+          fill="currentColor"
           viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
           aria-hidden
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
-          />
+          <path d="M8 5v14l11-7z" />
         </svg>
       </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm font-bold text-white">
+      <div className="min-w-0 flex-1">
+        <span className="block text-sm font-bold text-gray-900">
           Lanjutkan Bacaan
         </span>
-        <span className="block truncate text-xs text-emerald-100/70">
+        <span className="mt-0.5 block truncate text-[13px] text-gray-500">
           {surah.name} — Ayat {progress.ayah}
         </span>
-      </span>
+      </div>
+      <div className="flex flex-col items-end gap-1.5 shrink-0">
+        <div className="flex w-24 items-center justify-between text-[11px] font-medium text-gray-500">
+          <span>{progress.ayah} / {surah.ayahs} Ayat</span>
+          <span>{percentage}%</span>
+        </div>
+        <div className="h-1.5 w-24 overflow-hidden rounded-full bg-gray-100">
+          <div
+            className="h-full rounded-full bg-[#1db584]"
+            style={{ width: `${percentage}%` }}
+          />
+        </div>
+      </div>
       <svg
-        className="h-4 w-4 shrink-0 text-emerald-100/60"
+        className="ml-1 h-5 w-5 shrink-0 text-gray-400"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -51,7 +59,7 @@ export default function ContinueReading() {
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="m8.25 4.5 7.5 7.5-7.5 7.5"
+          d="m9 5 7 7-7 7"
         />
       </svg>
     </Link>

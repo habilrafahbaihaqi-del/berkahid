@@ -10,7 +10,12 @@ export interface PrayerTimesSnapshot {
   times: PrayerTime[];
   date: string;
   hijri: string | null;
-  source: "aladhan" | "fallback";
+  source: "myquran" | "aladhan" | "fallback";
+  location?: {
+    id?: string;
+    kabko?: string;
+    prov?: string;
+  };
   fetchedAt: number;
 }
 
@@ -33,11 +38,15 @@ export function setPrayerTimesSnapshot(snapshot: PrayerTimesSnapshot | null) {
 export async function fetchPrayerTimes(
   latitude: number,
   longitude: number,
+  locationName?: string,
 ): Promise<PrayerTimesSnapshot> {
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const params = new URLSearchParams({
     lat: latitude.toFixed(6),
     lon: longitude.toFixed(6),
   });
+  if (timezone) params.set("tz", timezone);
+  if (locationName) params.set("lokasi", locationName);
 
   const response = await fetch(`/api/prayer-times?${params.toString()}`);
   if (!response.ok) {
@@ -48,6 +57,8 @@ export async function fetchPrayerTimes(
     timings?: Record<string, string>;
     date?: string;
     hijri?: string | null;
+    source?: "myquran" | "aladhan";
+    location?: PrayerTimesSnapshot["location"];
   };
 
   if (!payload.timings) {
@@ -58,6 +69,7 @@ export async function fetchPrayerTimes(
     "imsak",
     "subuh",
     "terbit",
+    "dhuha",
     "dzuhur",
     "ashar",
     "maghrib",
@@ -77,7 +89,8 @@ export async function fetchPrayerTimes(
     times,
     date: payload.date ?? "",
     hijri: payload.hijri ?? null,
-    source: "aladhan",
+    source: payload.source ?? "fallback",
+    location: payload.location,
     fetchedAt: Date.now(),
   };
 }

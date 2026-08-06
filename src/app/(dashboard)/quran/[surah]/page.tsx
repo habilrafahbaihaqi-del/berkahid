@@ -29,13 +29,13 @@ export default async function SurahPage({ params }: SurahPageProps) {
     surahIndex < SURAHS.length - 1 ? SURAHS[surahIndex + 1].number : null;
 
   return (
-    <div className="min-h-dvh bg-gradient-to-b from-emerald-800 via-emerald-700 to-teal-900 text-white">
+    <div className="min-h-dvh bg-gray-50 text-gray-900">
       <main className="mx-auto flex max-w-md flex-col gap-4 px-4 pb-28 pt-6 sm:max-w-lg">
         <header className="flex items-center gap-3">
           <Link
             href="/quran"
             aria-label="Kembali ke daftar surah"
-            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm transition-colors hover:bg-white/25"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm ring-1 ring-gray-200 transition-colors hover:bg-gray-50"
           >
             <svg
               className="h-5 w-5"
@@ -53,23 +53,27 @@ export default async function SurahPage({ params }: SurahPageProps) {
             </svg>
           </Link>
           <div>
-            <h1 className="text-base font-bold">
-              Surah {surahData.name}
+            <h1 className="text-lg font-bold text-gray-900">
+              {surahData.name}
             </h1>
-            <p className="text-[11px] text-emerald-200/70">
+            <p className="text-[13px] text-gray-600">
               {surahData.meaning} · {surahData.ayahs} ayat · Juz {surahData.juz}
             </p>
           </div>
         </header>
 
-        <section className="flex flex-col items-center gap-2 rounded-3xl bg-white/10 px-5 py-8 backdrop-blur-sm ring-1 ring-white/20">
+        <section className="relative flex flex-col items-center gap-2 overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500 to-emerald-700 px-5 py-10 shadow-md">
+          {/* Decorative Background Element */}
+          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10 blur-xl" />
+          <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/10 blur-xl" />
+          
           <span
             dir="rtl"
-            className="font-quran text-4xl text-emerald-100"
+            className="relative font-quran text-5xl text-white drop-shadow-md"
           >
             {surahData.arabicName}
           </span>
-          <span className="text-xs font-medium uppercase tracking-widest text-emerald-200/70">
+          <span className="relative mt-2 text-sm font-semibold tracking-widest text-emerald-100">
             {surahData.name}
           </span>
         </section>

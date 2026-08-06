@@ -4,6 +4,8 @@ export interface Location {
   province: string;
   latitude?: number;
   longitude?: number;
+  postalCode?: string;
+  kabupaten?: string;
 }
 
 export interface CityCandidate extends Location {

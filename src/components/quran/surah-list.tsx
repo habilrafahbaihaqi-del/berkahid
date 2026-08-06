@@ -24,38 +24,22 @@ export default function SurahList({ surahs }: { surahs: Surah[] }) {
 
   return (
     <main className="mx-auto flex max-w-md flex-col gap-4 px-4 pb-10 pt-6 sm:max-w-lg">
-      <header className="flex items-center gap-3">
-        <Link
-          href="/dashboard"
-          aria-label="Kembali ke beranda"
-          className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm transition-colors hover:bg-white/25"
-        >
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-            aria-hidden
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
-            />
-          </svg>
-        </Link>
-        <div>
-          <h1 className="text-base font-bold">Al-Qur&apos;an</h1>
-          <p className="text-[11px] text-emerald-200/70">Daftar 114 surah</p>
+      <header className="relative mb-2 overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-50 to-teal-50 px-6 py-8 ring-1 ring-gray-200">
+        <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-emerald-500/10 blur-2xl" />
+        <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-teal-500/10 blur-2xl" />
+        <div className="relative z-10 flex flex-col gap-1">
+          <h1 className="text-2xl font-extrabold text-gray-900">Al-Qur&apos;an</h1>
+          <p className="max-w-[200px] text-[13px] leading-relaxed text-gray-600">
+            Bacalah, pahami, dan amalkan firman Allah setiap hari.
+          </p>
         </div>
       </header>
 
       <ContinueReading />
 
-      <div className="relative">
+      <div className="relative mt-2">
         <svg
-          className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-100/50"
+          className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -70,21 +54,21 @@ export default function SurahList({ surahs }: { surahs: Surah[] }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Cari surah / arti…"
-          className="w-full rounded-2xl border border-white/15 bg-white/10 py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-emerald-100/40 focus:border-emerald-300 focus:ring-2 focus:ring-emerald-300/30"
+          className="w-full rounded-full border-0 bg-white py-3.5 pl-11 pr-4 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-[#1db584] outline-none"
         />
       </div>
 
-      <div className="-mx-4 overflow-x-auto px-4 pb-1" role="tablist" aria-label="Pilih juz">
-        <div className="flex gap-1.5">
+      <div className="-mx-4 overflow-x-auto px-4 pb-1 scrollbar-hide" role="tablist" aria-label="Pilih juz">
+        <div className="flex gap-2">
           <button
             type="button"
             role="tab"
             aria-selected={selectedJuz === null}
             onClick={() => setSelectedJuz(null)}
-            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+            className={`shrink-0 rounded-full px-4 py-1.5 text-[13px] font-semibold transition-colors ${
               selectedJuz === null
-                ? "bg-emerald-400 text-emerald-950"
-                : "bg-white/10 text-emerald-100 hover:bg-white/20"
+                ? "bg-[#188965] text-white shadow-sm"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             Semua
@@ -96,10 +80,10 @@ export default function SurahList({ surahs }: { surahs: Surah[] }) {
               role="tab"
               aria-selected={selectedJuz === juz}
               onClick={() => setSelectedJuz(juz)}
-              className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+              className={`shrink-0 rounded-full px-4 py-1.5 text-[13px] font-semibold transition-colors ${
                 selectedJuz === juz
-                  ? "bg-emerald-400 text-emerald-950"
-                  : "bg-white/10 text-emerald-100 hover:bg-white/20"
+                  ? "bg-[#188965] text-white shadow-sm"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
               Juz {juz}
@@ -109,51 +93,55 @@ export default function SurahList({ surahs }: { surahs: Surah[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="py-10 text-center text-sm text-emerald-100/60">
+        <p className="py-10 text-center text-sm text-gray-500">
           Tidak ada surah yang cocok.
         </p>
       ) : (
-        <ul className="divide-y divide-white/10 overflow-hidden rounded-3xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
+        <ul className="flex flex-col gap-3">
           {filtered.map((surah) => (
             <li key={surah.number}>
               <Link
                 href={`/quran/${surah.number}`}
-                className="flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-white/10"
+                className="flex items-center gap-4 rounded-3xl bg-white px-4 py-3.5 shadow-sm ring-1 ring-gray-100 transition-shadow hover:shadow-md"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-400/15 text-sm font-bold text-emerald-200 ring-1 ring-emerald-300/30">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#e5f5f0] text-sm font-bold text-[#1db584]">
                   {surah.number}
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold text-white">
+                <div className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px] font-bold text-gray-900">
                     {surah.name}
                   </span>
-                  <span className="block truncate text-xs text-emerald-100/60">
+                  <span className="block truncate text-xs text-gray-500">
                     {surah.meaning} · {surah.ayahs} ayat
                   </span>
-                </span>
-                <span
-                  dir="rtl"
-                  className="font-quran text-xl text-emerald-100/90"
-                >
-                  {surah.arabicName}
-                </span>
-                <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-emerald-100/80">
-                  Juz {surah.juz}
-                </span>
-                <svg
-                  className="h-4 w-4 shrink-0 text-emerald-100/40"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  aria-hidden
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m8.25 4.5 7.5 7.5-7.5 7.5"
-                  />
-                </svg>
+                </div>
+                <div className="flex flex-col items-end gap-1.5">
+                  <span
+                    dir="rtl"
+                    className="font-quran text-2xl text-[#188965]"
+                  >
+                    {surah.arabicName}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+                      Juz {surah.juz}
+                    </span>
+                    <svg
+                      className="h-4 w-4 shrink-0 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      aria-hidden
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="m9 5 7 7-7 7"
+                      />
+                    </svg>
+                  </div>
+                </div>
               </Link>
             </li>
           ))}

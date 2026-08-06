@@ -2,15 +2,26 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { getMockTafsir } from "@/data/quran/mock-tafsir";
 import { saveQuranProgress } from "@/lib/quran-progress-store";
 
 export interface Ayah {
   number: number;
   numberInSurah: number;
-  juz: number;
+  juz: number | null;
+  page: number | null;
   text: string;
   translation: string;
+  audioUrl: string | null;
+  tafsir: {
+    kemenagShort: string | null;
+    kemenagLong: string | null;
+    quraish: string | null;
+    jalalayn: string | null;
+  };
+  sajda: {
+    recommended: boolean;
+    obligatory: boolean;
+  };
 }
 
 interface AyahListProps {
@@ -29,40 +40,133 @@ function formatArabicNumber(number: number) {
     .join("");
 }
 
-function AyahCard({
-  ayah,
-  surahNumber,
-}: {
-  ayah: Ayah;
-  surahNumber: number;
-}) {
+type TafsirSource = "kemenag" | "quraish" | "jalalayn";
+
+const TAFSIR_LABELS: Record<TafsirSource, string> = {
+  kemenag: "Kemenag",
+  quraish: "Quraish",
+  jalalayn: "Jalalayn",
+};
+
+function stripQuraishIntro(text: string) {
+  const match = /^\[\[.*?\]\]/.exec(text);
+  if (!match) return text;
+  return text.slice(match[0].length).trim();
+}
+
+function AyahCard({ ayah }: { ayah: Ayah }) {
   const [expanded, setExpanded] = useState(false);
-  const tafsir = getMockTafsir(surahNumber, ayah.numberInSurah);
+  const [tafsirSource, setTafsirSource] = useState<TafsirSource>("kemenag");
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+    };
+  }, []);
+
+  const toggleAudio = () => {
+    if (!ayah.audioUrl) return;
+    if (!audioRef.current) {
+      audioRef.current = new Audio(ayah.audioUrl);
+      audioRef.current.onended = () => setPlaying(false);
+    }
+    const audio = audioRef.current;
+    if (playing) {
+      audio.pause();
+      setPlaying(false);
+    } else {
+      audio
+        .play()
+        .then(() => setPlaying(true))
+        .catch(() => setPlaying(false));
+    }
+  };
+
+  const hasSajda = Boolean(ayah.sajda?.recommended || ayah.sajda?.obligatory);
+  const tafsirKemenag = ayah.tafsir?.kemenagShort ?? ayah.tafsir?.kemenagLong;
+  const tafsirLongAvailable = Boolean(ayah.tafsir?.kemenagLong);
+  const [showLongTafsir, setShowLongTafsir] = useState(false);
+
+  const tafsirContent =
+      tafsirSource === "kemenag"
+      ? showLongTafsir && ayah.tafsir?.kemenagLong
+        ? ayah.tafsir.kemenagLong
+        : tafsirKemenag
+      : tafsirSource === "quraish"
+        ? ayah.tafsir?.quraish
+          ? stripQuraishIntro(ayah.tafsir.quraish)
+          : null
+        : ayah.tafsir?.jalalayn;
+
+  const availableSources: TafsirSource[] = (
+    ["kemenag", "quraish", "jalalayn"] as TafsirSource[]
+  ).filter(
+    (source) =>
+      source === "kemenag"
+        ? Boolean(tafsirKemenag)
+        : Boolean(
+            source === "quraish" ? ayah.tafsir?.quraish : ayah.tafsir?.jalalayn,
+          ),
+  );
 
   return (
     <li
       id={`ayah-${ayah.numberInSurah}`}
-      className="scroll-mt-20 rounded-3xl bg-white/10 p-5 ring-1 ring-white/15"
+      className="scroll-mt-20 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100"
     >
       <p
         dir="rtl"
         lang="ar"
-        className="font-quran text-2xl leading-[2.2] text-white [text-align:justify]"
+        className="font-quran text-3xl leading-[2.2] text-gray-900 [text-align:justify]"
       >
         {ayah.text}
-        <span className="mx-2 inline-flex h-9 w-9 items-center justify-center rounded-full border border-emerald-300/40 bg-emerald-400/10 align-middle text-base font-bold text-emerald-200">
+        <span className="mx-2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#e5f5f0] align-middle text-base font-bold text-[#1db584]">
           {formatArabicNumber(ayah.numberInSurah)}
         </span>
       </p>
-      <p className="mt-3 border-t border-white/10 pt-3 text-sm leading-relaxed text-emerald-100/80">
+      {hasSajda && (
+        <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700 ring-1 ring-amber-200">
+          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
+          </svg>
+          Ayat Sajdah
+        </span>
+      )}
+      <p className="mt-4 border-t border-gray-100 pt-4 text-[15px] leading-relaxed text-gray-600">
         {ayah.translation}
       </p>
-      <div className="mt-3 flex justify-end">
+      <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+        {ayah.audioUrl && (
+          <button
+            type="button"
+            onClick={toggleAudio}
+            aria-pressed={playing}
+            className="flex items-center gap-1.5 rounded-full bg-gray-50 px-3.5 py-1.5 text-xs font-semibold text-gray-700 ring-1 ring-gray-200 transition-colors hover:bg-gray-100"
+          >
+            <svg
+              className="h-3.5 w-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+              aria-hidden
+            >
+              {playing ? (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+              )}
+            </svg>
+            {playing ? "Hentikan" : "Putar"}
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setExpanded((e) => !e)}
           aria-expanded={expanded}
-          className="flex items-center gap-1.5 rounded-full bg-emerald-400/15 px-3.5 py-1.5 text-xs font-semibold text-emerald-200 ring-1 ring-emerald-300/30 transition-colors hover:bg-emerald-400/25"
+          className="flex items-center gap-1.5 rounded-full bg-[#e5f5f0] px-3.5 py-1.5 text-xs font-semibold text-[#1db584] transition-colors hover:bg-[#c9ebe0]"
         >
           <svg
             className="h-3.5 w-3.5"
@@ -82,17 +186,63 @@ function AyahCard({
         </button>
       </div>
       {expanded && (
-        <div className="mt-2 rounded-2xl bg-emerald-400/10 p-4 ring-1 ring-emerald-300/20">
-          {tafsir ? (
+        <div className="mt-4 rounded-2xl bg-gray-50 p-4 ring-1 ring-gray-100">
+          {availableSources.length > 0 ? (
             <>
-              <p className="text-sm leading-relaxed text-emerald-50">{tafsir}</p>
-              <p className="mt-2 text-[10px] text-emerald-200/50">
-                Tafsir ringkas · data tiruan untuk pengembangan
-              </p>
+              <div className="flex flex-wrap gap-2">
+                {availableSources.map((source) => (
+                  <button
+                    key={source}
+                    type="button"
+                    onClick={() => setTafsirSource(source)}
+                    className={`rounded-full px-3.5 py-1.5 text-[11px] font-bold transition-colors ${
+                      tafsirSource === source
+                        ? "bg-[#188965] text-white"
+                        : "bg-white text-gray-500 ring-1 ring-gray-200 hover:bg-gray-100"
+                    }`}
+                  >
+                    {TAFSIR_LABELS[source]}
+                  </button>
+                ))}
+              </div>
+              {tafsirContent ? (
+                <>
+                  <p className="mt-4 whitespace-pre-line text-[14px] leading-relaxed text-gray-700">
+                    {tafsirContent}
+                  </p>
+                  {tafsirSource === "kemenag" &&
+                    tafsirLongAvailable &&
+                    ayah.tafsir.kemenagLong &&
+                    !showLongTafsir && (
+                      <button
+                        type="button"
+                        onClick={() => setShowLongTafsir(true)}
+                        className="mt-4 rounded-full bg-white px-4 py-2 text-[12px] font-bold text-[#1db584] ring-1 ring-gray-200 transition-colors hover:bg-gray-50"
+                      >
+                        Baca tafsir lengkap
+                      </button>
+                    )}
+                  <p className="mt-4 text-[11px] font-medium text-gray-400">
+                    {tafsirSource === "kemenag"
+                      ? showLongTafsir
+                        ? "Tafsir Kemenag (lengkap)"
+                        : "Tafsir Kemenag (ringkas)"
+                      : tafsirSource === "quraish"
+                        ? "Tafsir Al-Qurthubi versi Quraish Shihab"
+                        : "Tafsir Jalalayn"}
+                    {ayah.juz != null && ` · Juz ${ayah.juz}`}
+                    {ayah.page != null && ` · Hal. ${ayah.page}`}
+                  </p>
+                </>
+              ) : (
+                <p className="mt-4 text-sm text-gray-500">
+                  Tafsir {TAFSIR_LABELS[tafsirSource]} tidak tersedia untuk ayat ini.
+                </p>
+              )}
             </>
           ) : (
-            <p className="text-xs text-emerald-100/70">
-              Tafsir ayat ini akan tersedia setelah integrasi data tafsir.
+            <p className="text-sm text-gray-500">
+              Tafsir ayat ini tidak tersedia.
             </p>
           )}
         </div>
@@ -101,23 +251,58 @@ function AyahCard({
   );
 }
 
-interface QuranApiAyah {
+interface ApiAyah {
   number: number;
-  numberInSurah: number;
-  juz: number;
-  text: string;
+  surahNumber: number;
+  arab: string;
+  translation: string;
+  audioUrl: string | null;
+  tafsir: Ayah["tafsir"];
+  meta: {
+    juz: number | null;
+    page: number | null;
+    sajda: { recommended: boolean; obligatory: boolean };
+  };
 }
 
-interface QuranApiEdition {
-  edition: { identifier: string };
-  ayahs: QuranApiAyah[];
+interface ApiSurahPage {
+  ayahs: ApiAyah[];
+  pagination: { page: number; limit: number; total: number };
 }
 
+const PAGE_SIZE = 50;
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 interface CacheEntry {
   savedAt: number;
   ayahs: Ayah[];
+}
+
+function isValidCachedAyah(ayah: unknown): ayah is Ayah {
+  if (!ayah || typeof ayah !== "object") return false;
+  const candidate = ayah as Partial<Ayah>;
+  return (
+    typeof candidate.number === "number" &&
+    typeof candidate.numberInSurah === "number" &&
+    typeof candidate.text === "string" &&
+    typeof candidate.translation === "string" &&
+    typeof candidate.tafsir === "object" &&
+    typeof candidate.sajda === "object"
+  );
+}
+
+function mapApiAyah(ayah: ApiAyah): Ayah {
+  return {
+    number: ayah.number,
+    numberInSurah: ayah.number,
+    juz: ayah.meta.juz,
+    page: ayah.meta.page,
+    text: ayah.arab,
+    translation: ayah.translation,
+    audioUrl: ayah.audioUrl,
+    tafsir: ayah.tafsir,
+    sajda: ayah.meta.sajda,
+  };
 }
 
 export default function AyahList({
@@ -129,6 +314,7 @@ export default function AyahList({
   const [ayahs, setAyahs] = useState<Ayah[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [fromCache, setFromCache] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [currentAyah, setCurrentAyah] = useState(1);
   const requestIdRef = useRef(0);
@@ -164,16 +350,41 @@ export default function AyahList({
   useEffect(() => {
     const requestId = ++requestIdRef.current;
 
+    async function fetchPage(page: number): Promise<ApiSurahPage> {
+      const response = await fetch(
+        `/api/muslim/quran/surah/${surahNumber}?page=${page}&limit=${PAGE_SIZE}`,
+        { cache: "no-store" },
+      );
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = (await response.json()) as ApiSurahPage;
+      if (!Array.isArray(payload.ayahs)) throw new Error("Data ayat tidak valid");
+      return payload;
+    }
+
     async function load() {
-      const cacheKey = `berkahid:quran:${surahNumber}`;
+      const cacheKey = `berkahid:quran:${surahNumber}:v2`;
+      try {
+        const legacyKey = `berkahid:quran:${surahNumber}`;
+        if (window.localStorage.getItem(legacyKey)) {
+          window.localStorage.removeItem(legacyKey);
+        }
+      } catch {
+        // abaikan
+      }
       let cached: CacheEntry | null = null;
       try {
         const raw = window.localStorage.getItem(cacheKey);
         if (raw) {
           cached = JSON.parse(raw) as CacheEntry;
-          if (Array.isArray(cached.ayahs) && cached.ayahs.length > 0) {
+          if (
+            Array.isArray(cached.ayahs) &&
+            cached.ayahs.length > 0 &&
+            cached.ayahs.every(isValidCachedAyah)
+          ) {
             setAyahs(cached.ayahs);
             setFromCache(true);
+          } else {
+            cached = null;
           }
         }
       } catch {
@@ -181,55 +392,53 @@ export default function AyahList({
       }
 
       try {
-        const response = await fetch(
-          `https://api.alquran.cloud/v1/surah/${surahNumber}/editions/quran-uthmani,id.indonesian`,
-          { cache: "no-store" },
-        );
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-        const payload = (await response.json()) as {
-          data?: QuranApiEdition[];
-        };
-        const editions = payload.data ?? [];
-        const arabic = editions.find((e) =>
-          e.edition.identifier.startsWith("quran-uthmani"),
-        );
-        const indonesian = editions.find((e) =>
-          e.edition.identifier.startsWith("id.indonesian"),
-        );
-        if (!arabic || !indonesian) throw new Error("Edition tidak ditemukan");
-
-        const merged: Ayah[] = arabic.ayahs.map((ayah) => {
-          const translation =
-            indonesian.ayahs.find((t) => t.numberInSurah === ayah.numberInSurah)
-              ?.text ?? "";
-          return {
-            number: ayah.number,
-            numberInSurah: ayah.numberInSurah,
-            juz: ayah.juz,
-            text: ayah.text,
-            translation,
-          };
-        });
-
+        const firstPage = await fetchPage(1);
         if (requestIdRef.current !== requestId) return;
 
-        setAyahs(merged);
+        const firstBatch = firstPage.ayahs.map(mapApiAyah);
+        setAyahs(firstBatch);
         setFromCache(false);
         setError(null);
-        try {
-          window.localStorage.setItem(
-            cacheKey,
-            JSON.stringify({ savedAt: Date.now(), ayahs: merged } satisfies CacheEntry),
-          );
-        } catch {
-          // localStorage penuh — abaikan
+
+        const total = firstPage.pagination?.total ?? firstBatch.length;
+        const totalPages = Math.ceil(total / PAGE_SIZE);
+
+        if (totalPages > 1) {
+          setLoadingMore(true);
+          const rest: Ayah[] = [];
+          for (let page = 2; page <= totalPages; page += 1) {
+            const nextPage = await fetchPage(page);
+            if (requestIdRef.current !== requestId) return;
+            rest.push(...nextPage.ayahs.map(mapApiAyah));
+          }
+          if (requestIdRef.current !== requestId) return;
+          const complete = [...firstBatch, ...rest];
+          setAyahs(complete);
+          try {
+            window.localStorage.setItem(
+              cacheKey,
+              JSON.stringify({ savedAt: Date.now(), ayahs: complete } satisfies CacheEntry),
+            );
+          } catch {
+            // localStorage penuh — abaikan
+          }
+          setLoadingMore(false);
+        } else {
+          try {
+            window.localStorage.setItem(
+              cacheKey,
+              JSON.stringify({ savedAt: Date.now(), ayahs: firstBatch } satisfies CacheEntry),
+            );
+          } catch {
+            // localStorage penuh — abaikan
+          }
         }
       } catch {
         if (requestIdRef.current !== requestId) return;
         if (!cached || cached.savedAt + CACHE_TTL_MS < Date.now()) {
           setError("Gagal memuat ayat. Periksa koneksi lalu coba lagi.");
         }
+        setLoadingMore(false);
       }
     }
 
@@ -241,8 +450,8 @@ export default function AyahList({
 
   if (error) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-3xl bg-white/10 px-5 py-10 text-center ring-1 ring-white/15">
-        <p className="text-sm text-emerald-100/80">{error}</p>
+      <div className="flex flex-col items-center gap-3 rounded-3xl bg-white px-5 py-10 text-center ring-1 ring-gray-100 shadow-sm">
+        <p className="text-sm text-gray-500">{error}</p>
         <button
           type="button"
           onClick={() => {
@@ -251,7 +460,7 @@ export default function AyahList({
             setFromCache(false);
             setAttempt((a) => a + 1);
           }}
-          className="rounded-full bg-white px-4 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-50"
+          className="rounded-full bg-gray-100 px-4 py-2 text-xs font-bold text-gray-700 hover:bg-gray-200"
         >
           Coba lagi
         </button>
@@ -263,7 +472,7 @@ export default function AyahList({
     return (
       <div className="flex flex-col items-center gap-3 py-16">
         <svg
-          className="h-6 w-6 animate-spin text-emerald-200"
+          className="h-6 w-6 animate-spin text-[#1db584]"
           viewBox="0 0 24 24"
           fill="none"
           aria-hidden
@@ -282,7 +491,7 @@ export default function AyahList({
             d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4Z"
           />
         </svg>
-        <p className="text-sm text-emerald-100/70">Memuat ayat…</p>
+        <p className="text-sm text-gray-500">Memuat ayat…</p>
       </div>
     );
   }
@@ -294,20 +503,23 @@ export default function AyahList({
   };
 
   const lastAyah = ayahs.length;
+  const showBasmalah = surahNumber !== 1 && surahNumber !== 9;
 
   return (
     <section className="flex flex-col gap-2">
-      <div className="flex flex-col items-center gap-2 rounded-3xl bg-white/10 px-5 py-7 backdrop-blur-sm ring-1 ring-white/20">
-        <span dir="rtl" className="font-quran text-3xl text-emerald-100">
-          بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-        </span>
-        <span className="text-[11px] text-emerald-200/60">Basmalah</span>
-      </div>
+      {showBasmalah && (
+        <div className="flex flex-col items-center gap-2 rounded-3xl bg-white px-5 py-7 shadow-sm ring-1 ring-gray-100">
+          <span dir="rtl" className="font-quran text-3xl text-[#1db584]">
+            بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+          </span>
+          <span className="text-[12px] font-medium text-gray-400">Basmalah</span>
+        </div>
+      )}
 
       {ayahs.length > 1 && (
-        <div className="sticky top-2 z-10 flex items-center gap-2 rounded-2xl bg-emerald-900/80 px-4 py-2.5 shadow-lg backdrop-blur-md ring-1 ring-white/15">
-          <span className="truncate text-xs font-semibold text-white">
-            {surahName} · {ayahs.length} ayat
+        <div className="sticky top-2 z-10 flex items-center gap-2 rounded-2xl bg-white/90 px-4 py-2.5 shadow-sm backdrop-blur-md ring-1 ring-gray-200">
+          <span className="truncate text-[13px] font-bold text-gray-900">
+            {surahName} · {lastAyah} ayat
           </span>
           <div className="relative ml-auto shrink-0">
             <select
@@ -319,7 +531,7 @@ export default function AyahList({
                 );
                 target?.scrollIntoView({ behavior: "smooth", block: "start" });
               }}
-              className="appearance-none rounded-full border border-white/20 bg-white/10 py-1.5 pl-3 pr-8 text-xs font-medium text-white outline-none [&>option]:text-emerald-950 focus:border-emerald-300"
+              className="appearance-none rounded-full border-0 bg-gray-50 py-1.5 pl-4 pr-8 text-xs font-medium text-gray-700 ring-1 ring-inset ring-gray-200 outline-none focus:ring-2 focus:ring-inset focus:ring-[#1db584]"
             >
               <option value="" disabled>
                 Ayat…
@@ -331,7 +543,7 @@ export default function AyahList({
               ))}
             </select>
             <svg
-              className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-emerald-100/70"
+              className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -350,12 +562,38 @@ export default function AyahList({
 
       <ul className="flex flex-col gap-3">
         {ayahs.map((ayah) => (
-          <AyahCard key={ayah.number} ayah={ayah} surahNumber={surahNumber} />
+          <AyahCard key={ayah.number} ayah={ayah} />
         ))}
       </ul>
 
+      {loadingMore && (
+        <div className="flex items-center justify-center gap-2 py-4 text-xs font-medium text-gray-400">
+          <svg
+            className="h-4 w-4 animate-spin"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4Z"
+            />
+          </svg>
+          Memuat ayat lainnya…
+        </div>
+      )}
+
       {fromCache && (
-        <p className="text-center text-[11px] text-emerald-200/50">
+        <p className="text-center text-[11px] text-gray-400">
           Ditampilkan dari penyimpanan perangkat — diperbarui saat online.
         </p>
       )}
@@ -367,7 +605,7 @@ export default function AyahList({
         {prevSurah !== null ? (
           <Link
             href={`/quran/${prevSurah}`}
-            className="flex min-w-0 items-center gap-1.5 rounded-full bg-white/10 px-4 py-2.5 text-xs font-semibold text-emerald-100 ring-1 ring-white/15 transition-colors hover:bg-white/20"
+            className="flex min-w-0 items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 shadow-sm ring-1 ring-gray-200 transition-colors hover:bg-gray-50"
           >
             <svg
               className="h-3.5 w-3.5 shrink-0"
@@ -386,14 +624,14 @@ export default function AyahList({
             <span className="truncate">Surah {prevSurah}</span>
           </Link>
         ) : (
-          <span className="flex items-center gap-1.5 rounded-full bg-white/5 px-4 py-2.5 text-xs font-semibold text-emerald-100/40">
+          <span className="flex items-center gap-1.5 rounded-full bg-transparent px-4 py-2.5 text-xs font-semibold text-gray-400">
             Awal Al-Qur&apos;an
           </span>
         )}
         {nextSurah !== null ? (
           <Link
             href={`/quran/${nextSurah}`}
-            className="flex min-w-0 items-center gap-1.5 rounded-full bg-white/10 px-4 py-2.5 text-xs font-semibold text-emerald-100 ring-1 ring-white/15 transition-colors hover:bg-white/20"
+            className="flex min-w-0 items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 shadow-sm ring-1 ring-gray-200 transition-colors hover:bg-gray-50"
           >
             <span className="truncate">Surah {nextSurah}</span>
             <svg
@@ -412,7 +650,7 @@ export default function AyahList({
             </svg>
           </Link>
         ) : (
-          <span className="flex items-center gap-1.5 rounded-full bg-white/5 px-4 py-2.5 text-xs font-semibold text-emerald-100/40">
+          <span className="flex items-center gap-1.5 rounded-full bg-transparent px-4 py-2.5 text-xs font-semibold text-gray-400">
             Akhir Al-Qur&apos;an
           </span>
         )}
@@ -420,12 +658,12 @@ export default function AyahList({
 
       {ayahs.length > 1 && (
         <div className="fixed inset-x-0 bottom-0 z-20">
-          <div className="mx-auto flex max-w-md items-center justify-between gap-2 bg-emerald-950/85 px-4 py-3 shadow-2xl ring-1 ring-white/15 backdrop-blur-md sm:max-w-lg">
+          <div className="mx-auto flex max-w-md items-center justify-between gap-2 bg-white/90 px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] ring-1 ring-gray-200 backdrop-blur-md sm:max-w-lg">
             <button
               type="button"
               onClick={() => scrollToAyah(Math.max(1, currentAyah - 1))}
               disabled={currentAyah <= 1}
-              className="flex items-center gap-1 rounded-full bg-white/10 px-3.5 py-2 text-xs font-semibold text-emerald-100 transition-colors hover:bg-white/20 disabled:opacity-40"
+              className="flex items-center gap-1 rounded-full bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-700 ring-1 ring-gray-200 transition-colors hover:bg-gray-100 disabled:opacity-40"
             >
               <svg
                 className="h-3.5 w-3.5"
@@ -443,14 +681,14 @@ export default function AyahList({
               </svg>
               Sebelumnya
             </button>
-            <span className="text-xs font-semibold tabular-nums text-emerald-100/80">
+            <span className="text-xs font-bold tabular-nums text-gray-600">
               Ayat {currentAyah} / {lastAyah}
             </span>
             <button
               type="button"
               onClick={() => scrollToAyah(Math.min(lastAyah, currentAyah + 1))}
               disabled={currentAyah >= lastAyah}
-              className="flex items-center gap-1 rounded-full bg-white/10 px-3.5 py-2 text-xs font-semibold text-emerald-100 transition-colors hover:bg-white/20 disabled:opacity-40"
+              className="flex items-center gap-1 rounded-full bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-700 ring-1 ring-gray-200 transition-colors hover:bg-gray-100 disabled:opacity-40"
             >
               Berikutnya
               <svg

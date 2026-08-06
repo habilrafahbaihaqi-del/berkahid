@@ -7,6 +7,8 @@ const PROTECTED_PREFIXES = [
   "/zikir",
   "/doa",
   "/cerita",
+  "/kalender",
+  "/lokasi",
   "/kiblat",
   "/pengaturan",
 ];
